@@ -1,0 +1,34 @@
+OIL_VERSION = "3.1";
+
+CPU arm_interrupt {
+  OS LE_OS {
+    STATUS = EXTENDED;
+    USERESSCHEDULER = FALSE; 
+    AUTOSAR = TRUE {
+        OSBEGINEND = FALSE;
+    };
+    BUILD = TRUE {
+      TRAMPOLINE_BASE_PATH = "/Users/alejandrocalderonaveitua/autosar/trampoline";
+      APP_SRC = "turn_light.c";
+      APP_NAME = "turn_light_exe";
+      
+      CFLAGS  = "-mcpu=cortex-a7 -mfpu=vfpv4 -marm -std=gnu99 -I. -I./turn_light -I/Users/alejandrocalderonaveitua/autosar/trampoline/os -I/Users/alejandrocalderonaveitua/autosar/trampoline/autosar";
+      ASFLAGS = "-mcpu=cortex-a7 -marm -I. -I./turn_light -I/Users/alejandrocalderonaveitua/autosar/trampoline/os -I/Users/alejandrocalderonaveitua/autosar/trampoline/autosar";
+
+      COMPILER  = "arm-none-eabi-gcc";
+      ASSEMBLER = "./arm-wrapper.sh";  /* <--- Point to your new wrapper */
+      LINKER    = "arm-none-eabi-ld";
+      SYSTEM    = PYTHON;
+    };
+  };
+
+  APPMODE std {};
+
+  TASK blink_task {
+    PRIORITY = 1;
+    AUTOSTART = TRUE { APPMODE = std; };
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512;
+  };
+};
