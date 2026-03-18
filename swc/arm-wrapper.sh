@@ -1,41 +1,33 @@
 #!/bin/bash
-TPL_BASE="/Users/alejandrocalderonaveitua/autosar/trampoline"
-APP_BASE="/Users/alejandrocalderonaveitua/autosar/swc/turn_light"
+set -e
 
-# 1. Separate the .S file
-INPUT_FILE=""
-GCC_ARGS=()
-for arg in "$@"; do
-    if [[ $arg == *.S ]]; then
-        INPUT_FILE="$arg"
-    else
-        GCC_ARGS+=("$arg")
-    fi
+# lxcalder-oss: Hard-coded verified paths
+TPL_BASE="$HOME/autosar/trampoline"
+APP_BASE="$HOME/autosar-m0/autosar_turn_lights"
+
+# Ensure dummy headers exist (AUTOSAR Requirement)
+touch "$APP_BASE/swc/tpl_app_define.h"
+touch "$APP_BASE/swc/AsMemMap.h"
+
+while getopts "c:o:" opt; do
+  case $opt in
+    c) INPUT_FILE="$OPTARG" ;;
+    o) OUTPUT_FILE="$OPTARG" ;;
+  esac
 done
 
-# 2. Preprocess
-# -DSYSCALL_COUNT=64 is a safe default for virt-v7 if the header is missing
-arm-none-eabi-gcc -E -march=armv7ve -marm \
--I. \
--I"$APP_BASE" \
--I"$TPL_BASE/os" \
--I"$TPL_BASE/autosar" \
--I"$TPL_BASE/machines/virt-v7" \
--I"$TPL_BASE/machines/virt-v7/armv7ve" \
--I"$TPL_BASE/machines/virt-v7/armv7ve/board" \
--D__ASSEMBLY__ \
--DSYSCALL_COUNT=64 \
-"$INPUT_FILE" > temp_preprocessed.s
+# 2. Preprocess with the "Golden Includes"
+arm-none-eabi-gcc -E -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft \
+  -I. \
+  -I"$APP_BASE/swc" \
+  -I"$TPL_BASE/os" \
+  -I"$TPL_BASE/machines/cortex-m" \
+  -I"$TPL_BASE/machines/cortex-m/armv6m" \
+  -D__ASSEMBLY__ \
+  -DSYSCALL_COUNT=64 \
+  "$INPUT_FILE" > temp_preprocessed.s
 
 # 3. Assemble
-arm-none-eabi-gcc "${GCC_ARGS[@]}" -march=armv7ve -marm -x assembler temp_preprocessed.s
+arm-none-eabi-gcc -mcpu=cortex-m0plus -mthumb -c temp_preprocessed.s -o "$OUTPUT_FILE"
 
-# 4. Cleanup and Feedback
-if [ $? -eq 0 ]; then
-    rm temp_preprocessed.s
-    echo "Successfully assembled: $INPUT_FILE"
-else
-    echo "--- ERROR DURING ASSEMBLY ---"
-    # If it fails, let's see why the macros aren't expanding
-    grep -n "set_current_mode" temp_preprocessed.s | head -n 5
-fi
+echo "SUCCESS: $OUTPUT_FILE generated for Cortex-M0+."
