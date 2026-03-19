@@ -1,0 +1,17 @@
+# Build Artifacts
+*.o
+temp.s
+build/
+make.py
+
+# Compiled Binaries and Maps (common in embedded)
+*.elf
+*.bin
+*.hex
+*.map
+
+# OS and Editor clutter
+.DS_Store
+.vscode/
+*.swp
+*~
