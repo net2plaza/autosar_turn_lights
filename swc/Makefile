@@ -6,6 +6,10 @@
 #	clean: it will clean any artifacts generated for this specific development
 #   build: vitr-v7 or m0+ 
 # 
+# Usage:
+# Clean generated artifacts
+# make clean
+# 
 # --- Global Paths ---
 TPL_BASE ?= $(HOME)/autosar/trampoline
 # Note: Keeping your original APP_BASE from the v7 wrapper
